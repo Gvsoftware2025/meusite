@@ -306,7 +306,7 @@ export default function PortfolioPage() {
           <div className="container mx-auto px-6 py-8">
             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="text-center md:text-left">
-                <p className="text-gray-400 text-sm">© 2025 GV Software. Todos os direitos reservados.</p>
+                <p className="text-gray-400 text-sm">© {new Date().getFullYear()} GV Software. Todos os direitos reservados.</p>
                 <p className="text-gray-500 text-xs mt-1">Transformando ideias em realidade digital</p>
               </div>
 

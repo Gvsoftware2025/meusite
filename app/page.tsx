@@ -24,14 +24,15 @@ import {
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { createClient } from "@/lib/supabase/client"
-import { createBrowserClient } from "@supabase/ssr"
+import { ProjectCard } from "@/components/project-card"
+import { ProjectModal } from "@/components/project-modal"
 
 // Interface for projects from database
 interface Project {
   id: string
   title: string
   description: string
-  image_url: string
+  image_url: string | string[]
   technologies: string[]
   is_featured: boolean
   display_order: number
@@ -49,6 +50,9 @@ export default function PortfolioPage() {
   // State for projects from database
   const [projects, setProjects] = useState<Project[]>([])
   const [loadingProjects, setLoadingProjects] = useState(true)
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
   const [formData, setFormData] = useState({
     name: "",
     company: "",
@@ -75,20 +79,56 @@ export default function PortfolioPage() {
   useEffect(() => {
     const fetchProjects = async () => {
       setLoadingProjects(true)
+
       const { data, error } = await supabase
         .from("portfolio_projects")
         .select("*")
         .order("display_order", { ascending: true })
 
-      if (!error && data) {
-        setProjects(data)
+      if (error) {
+        console.error("Error fetching projects:", error)
+        setLoadingProjects(false)
+        return
       }
+
+      if (!data || data.length === 0) {
+        setProjects([])
+        setLoadingProjects(false)
+        return
+      }
+
+      const processedProjects = data.map((project) => {
+        let imageUrls = []
+        if (typeof project.image_url === "string") {
+          try {
+            const parsed = JSON.parse(project.image_url)
+            imageUrls = Array.isArray(parsed) ? parsed : [parsed]
+          } catch {
+            imageUrls = [project.image_url]
+          }
+        } else if (Array.isArray(project.image_url)) {
+          imageUrls = project.image_url
+        }
+
+        const processedProject = {
+          ...project,
+          image_url: imageUrls,
+          technologies: project.technologies || [],
+          is_featured: project.is_featured || false,
+          display_order: project.display_order || 0,
+          description: project.description || "",
+          title: project.title || "Projeto",
+        }
+
+        return processedProject
+      })
+
+      setProjects(processedProjects)
       setLoadingProjects(false)
     }
 
     fetchProjects()
 
-    // Subscribe to realtime changes
     const channel = supabase
       .channel("portfolio_projects_public")
       .on("postgres_changes", { event: "*", schema: "public", table: "portfolio_projects" }, fetchProjects)
@@ -102,7 +142,7 @@ export default function PortfolioPage() {
   useEffect(() => {
     const fetchAbout = async () => {
       try {
-        const supabaseBrowser = createBrowserClient(
+        const supabaseBrowser = createClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
           process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         )
@@ -165,7 +205,7 @@ export default function PortfolioPage() {
     { name: "Node.js", icon: Smartphone },
     { name: "TypeScript", icon: Sparkles },
     { name: "Python", icon: "🐍", isEmoji: true },
-    { name: "PostgreSQL", icon: Database }, // removed isEmoji: true since Database is a component
+    { name: "PostgreSQL", icon: Database },
     { name: "MongoDB", icon: "🍃", isEmoji: true },
     { name: "Docker", icon: "🐳", isEmoji: true },
     { name: "AWS", icon: "☁️", isEmoji: true },
@@ -229,6 +269,11 @@ export default function PortfolioPage() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const openProjectModal = (project: Project) => {
+    setSelectedProject(project)
+    setIsModalOpen(true)
   }
 
   return (
@@ -506,8 +551,9 @@ export default function PortfolioPage() {
           </div>
         </section>
 
-        <section id="projetos" className="py-32 px-6">
-          <div className="container mx-auto max-w-7xl">
+        {/* Portfolio Section */}
+        <section id="projetos" className="section-padding relative overflow-hidden">
+          <div className="max-w-[1400px] mx-auto px-6 sm:px-8 lg:px-12 relative z-10">
             <div className="text-center mb-16 scroll-reveal slide-down">
               <h2 className="text-5xl font-bold text-white mb-4">
                 Nossos <span className="text-gradient">Projetos</span>
@@ -525,38 +571,18 @@ export default function PortfolioPage() {
                 <p className="text-gray-400 text-lg">Nenhum projeto cadastrado ainda.</p>
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {projects.map((project, index) => {
                   const animations = ["slide-left", "slide-up", "slide-right", "slide-right", "slide-up", "slide-left"]
                   const delays = ["delay-100", "delay-200", "delay-300", "delay-100", "delay-200", "delay-300"]
                   return (
-                    <div
+                    <ProjectCard
                       key={project.id}
-                      className={`glass-card rounded-2xl overflow-hidden hover-lift group cursor-pointer scroll-reveal ${animations[index % 6]} ${delays[index % 6]}`}
-                    >
-                      <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-purple-600/20 to-blue-600/20">
-                        <Image
-                          src={project.image_url || "/placeholder.svg"}
-                          alt={project.title}
-                          fill
-                          className="object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
-                      </div>
-                      <div className="p-6">
-                        <h3 className="text-xl font-semibold text-white mb-2">{project.title}</h3>
-                        <p className="text-gray-400 mb-4">{project.description}</p>
-                        <div className="flex flex-wrap gap-2">
-                          {project.technologies?.map((tag, i) => (
-                            <span
-                              key={i}
-                              className="px-3 py-1 text-xs rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
+                      project={project}
+                      onClick={() => openProjectModal(project)}
+                      animationClass={animations[index % 6]}
+                      delayClass={delays[index % 6]}
+                    />
                   )
                 })}
               </div>
@@ -876,7 +902,7 @@ export default function PortfolioPage() {
             <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent mb-6" />
 
             <p className="text-center text-base md:text-lg font-medium text-white/80">
-              © 2025{" "}
+              © {new Date().getFullYear()}{" "}
               <span className="bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent font-bold">
                 GV Software
               </span>
@@ -885,6 +911,10 @@ export default function PortfolioPage() {
           </div>
         </footer>
       </div>
+
+      {selectedProject && (
+        <ProjectModal project={selectedProject} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      )}
     </div>
   )
 }
