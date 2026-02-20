@@ -24,7 +24,6 @@ import {
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { createClient } from "@/lib/supabase/client"
-import { createBrowserClient } from "@supabase/ssr"
 
 // Interface for projects from database
 interface Project {
@@ -73,6 +72,11 @@ export default function PortfolioPage() {
   const supabase = createClient()
 
   useEffect(() => {
+    if (!supabase) {
+      setLoadingProjects(false)
+      return
+    }
+
     const fetchProjects = async () => {
       setLoadingProjects(true)
       const { data, error } = await supabase
@@ -100,14 +104,14 @@ export default function PortfolioPage() {
   }, [supabase])
 
   useEffect(() => {
+    if (!supabase) {
+      setLoadingAbout(false)
+      return
+    }
+
     const fetchAbout = async () => {
       try {
-        const supabaseBrowser = createBrowserClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        )
-
-        const { data, error } = await supabaseBrowser
+        const { data, error } = await supabase
           .from("portfolio_about")
           .select("*")
           .order("created_at", { ascending: false })
@@ -135,7 +139,7 @@ export default function PortfolioPage() {
     }
 
     fetchAbout()
-  }, [])
+  }, [supabase])
 
   useEffect(() => {
     const observerOptions = {
@@ -184,16 +188,18 @@ export default function PortfolioPage() {
     setIsSubmitting(true)
 
     try {
-      const { error } = await supabase.from("portfolio_contacts").insert({
-        name: formData.name,
-        company: formData.company,
-        email: formData.email,
-        phone: formData.phone,
-        subject: formData.subject,
-        budget: formData.budget,
-        deadline: formData.deadline,
-        message: formData.message,
-      })
+      if (supabase) {
+        await supabase.from("portfolio_contacts").insert({
+          name: formData.name,
+          company: formData.company,
+          email: formData.email,
+          phone: formData.phone,
+          subject: formData.subject,
+          budget: formData.budget,
+          deadline: formData.deadline,
+          message: formData.message,
+        })
+      }
 
       await fetch("/api/contact", {
         method: "POST",
