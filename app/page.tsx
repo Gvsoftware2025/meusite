@@ -20,10 +20,37 @@ import {
   Phone,
   Instagram,
   Briefcase,
+  Server,
+  FileCode,
+  Terminal,
+  Leaf,
+  Container,
+  Cloud,
+  GitBranch,
+  Palette,
+  Share2,
+  type LucideIcon,
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { createClient } from "@/lib/supabase/client"
+
+const iconMap: Record<string, LucideIcon> = {
+  Code2,
+  Zap,
+  Server,
+  FileCode,
+  Terminal,
+  Database,
+  Leaf,
+  Container,
+  Cloud,
+  GitBranch,
+  Palette,
+  Share2,
+  Smartphone,
+  Sparkles,
+}
 
 // Interface for projects from database
 interface Project {
@@ -33,6 +60,15 @@ interface Project {
   image_url: string
   technologies: string[]
   is_featured: boolean
+  display_order: number
+}
+
+interface Skill {
+  id: string
+  name: string
+  icon: string
+  color: string
+  category: string
   display_order: number
 }
 
@@ -68,6 +104,8 @@ export default function PortfolioPage() {
     years_experience: 5,
   })
   const [loadingAbout, setLoadingAbout] = useState(true)
+  const [skills, setSkills] = useState<Skill[]>([])
+  const [loadingSkills, setLoadingSkills] = useState(true)
 
   const supabase = createClient()
 
@@ -142,6 +180,32 @@ export default function PortfolioPage() {
   }, [supabase])
 
   useEffect(() => {
+    if (!supabase) {
+      setLoadingSkills(false)
+      return
+    }
+
+    const fetchSkills = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("portfolio_skills")
+          .select("*")
+          .order("display_order", { ascending: true })
+
+        if (!error && data) {
+          setSkills(data)
+        }
+      } catch (error) {
+        console.error("Error fetching skills:", error)
+      } finally {
+        setLoadingSkills(false)
+      }
+    }
+
+    fetchSkills()
+  }, [supabase])
+
+  useEffect(() => {
     const observerOptions = {
       threshold: 0.1,
       rootMargin: "0px 0px -50px 0px",
@@ -162,21 +226,6 @@ export default function PortfolioPage() {
 
     return () => observer.disconnect()
   }, [])
-
-  const skills = [
-    { name: "React.js", icon: Code2 },
-    { name: "Next.js", icon: Zap },
-    { name: "Node.js", icon: Smartphone },
-    { name: "TypeScript", icon: Sparkles },
-    { name: "Python", icon: "🐍", isEmoji: true },
-    { name: "PostgreSQL", icon: Database }, // removed isEmoji: true since Database is a component
-    { name: "MongoDB", icon: "🍃", isEmoji: true },
-    { name: "Docker", icon: "🐳", isEmoji: true },
-    { name: "AWS", icon: "☁️", isEmoji: true },
-    { name: "Git", icon: "📦", isEmoji: true },
-    { name: "TailwindCSS", icon: "🎨", isEmoji: true },
-    { name: "GraphQL", icon: "◈", isEmoji: true },
-  ]
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -474,40 +523,33 @@ export default function PortfolioPage() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {skills.map((skill, index) => {
-                const Icon = skill.icon
-                const delays = [
-                  "delay-100",
-                  "delay-200",
-                  "delay-300",
-                  "delay-400",
-                  "delay-100",
-                  "delay-200",
-                  "delay-300",
-                  "delay-400",
-                  "delay-100",
-                  "delay-200",
-                  "delay-300",
-                  "delay-400",
-                ]
-                return (
-                  <div
-                    key={index}
-                    className={`glass-card rounded-2xl p-8 hover-lift group cursor-pointer scroll-reveal zoom-in ${delays[index]}`}
-                  >
-                    <div
-                      className={`w-16 h-16 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}
-                    >
-                      {skill.isEmoji ? (
-                        <span className="text-4xl">{Icon as string}</span>
-                      ) : (
-                        <Icon className="w-8 h-8 text-white" />
-                      )}
-                    </div>
-                    <h3 className="text-lg font-semibold text-white">{skill.name}</h3>
+              {loadingSkills ? (
+                Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="glass-card rounded-2xl p-8 animate-pulse">
+                    <div className="w-16 h-16 rounded-xl bg-white/10 mb-4" />
+                    <div className="h-5 w-24 rounded bg-white/10" />
                   </div>
-                )
-              })}
+                ))
+              ) : (
+                skills.map((skill, index) => {
+                  const Icon = iconMap[skill.icon] || Code2
+                  const delays = ["delay-100", "delay-200", "delay-300", "delay-400"]
+                  return (
+                    <div
+                      key={skill.id}
+                      className={`glass-card rounded-2xl p-8 hover-lift group cursor-pointer scroll-reveal zoom-in ${delays[index % 4]}`}
+                    >
+                      <div
+                        className="w-16 h-16 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
+                        style={{ backgroundColor: `${skill.color}20` }}
+                      >
+                        <Icon className="w-8 h-8" style={{ color: skill.color }} />
+                      </div>
+                      <h3 className="text-lg font-semibold text-white">{skill.name}</h3>
+                    </div>
+                  )
+                })
+              )}
             </div>
           </div>
         </section>
