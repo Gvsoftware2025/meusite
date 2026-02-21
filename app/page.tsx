@@ -31,7 +31,7 @@ import {
   Share2,
   type LucideIcon,
 } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Image from "next/image"
 import { createClient } from "@/lib/supabase/client"
 
@@ -107,13 +107,18 @@ export default function PortfolioPage() {
   const [skills, setSkills] = useState<Skill[]>([])
   const [loadingSkills, setLoadingSkills] = useState(true)
 
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
     if (!supabase) {
+      console.log("[v0] Supabase client is null - env vars missing")
       setLoadingProjects(false)
+      setLoadingAbout(false)
+      setLoadingSkills(false)
       return
     }
+
+    console.log("[v0] Supabase client created, fetching data...")
 
     const fetchProjects = async () => {
       setLoadingProjects(true)
@@ -122,29 +127,11 @@ export default function PortfolioPage() {
         .select("*")
         .order("display_order", { ascending: true })
 
+      console.log("[v0] Projects fetch result:", { data, error })
       if (!error && data) {
         setProjects(data)
       }
       setLoadingProjects(false)
-    }
-
-    fetchProjects()
-
-    // Subscribe to realtime changes
-    const channel = supabase
-      .channel("portfolio_projects_public")
-      .on("postgres_changes", { event: "*", schema: "public", table: "portfolio_projects" }, fetchProjects)
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [supabase])
-
-  useEffect(() => {
-    if (!supabase) {
-      setLoadingAbout(false)
-      return
     }
 
     const fetchAbout = async () => {
@@ -156,12 +143,8 @@ export default function PortfolioPage() {
           .limit(1)
           .single()
 
-        if (error) {
-          console.error("Error fetching about:", error)
-          return
-        }
-
-        if (data) {
+        console.log("[v0] About fetch result:", { data, error })
+        if (!error && data) {
           setAboutData({
             description: data.description || aboutData.description,
             projects_count: data.projects_count || 50,
@@ -170,19 +153,10 @@ export default function PortfolioPage() {
           })
         }
       } catch (error) {
-        console.error("Error:", error)
+        console.error("[v0] Error fetching about:", error)
       } finally {
         setLoadingAbout(false)
       }
-    }
-
-    fetchAbout()
-  }, [supabase])
-
-  useEffect(() => {
-    if (!supabase) {
-      setLoadingSkills(false)
-      return
     }
 
     const fetchSkills = async () => {
@@ -192,17 +166,30 @@ export default function PortfolioPage() {
           .select("*")
           .order("display_order", { ascending: true })
 
+        console.log("[v0] Skills fetch result:", { data, error })
         if (!error && data) {
           setSkills(data)
         }
       } catch (error) {
-        console.error("Error fetching skills:", error)
+        console.error("[v0] Error fetching skills:", error)
       } finally {
         setLoadingSkills(false)
       }
     }
 
+    fetchProjects()
+    fetchAbout()
     fetchSkills()
+
+    // Subscribe to realtime changes
+    const channel = supabase
+      .channel("portfolio_projects_public")
+      .on("postgres_changes", { event: "*", schema: "public", table: "portfolio_projects" }, fetchProjects)
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [supabase])
 
   useEffect(() => {
