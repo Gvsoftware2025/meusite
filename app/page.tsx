@@ -32,6 +32,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import { useState, useEffect, useMemo } from "react"
+import { createClient } from "@/lib/supabase/client"
 
 const iconMap: Record<string, LucideIcon> = {
   Code2,
