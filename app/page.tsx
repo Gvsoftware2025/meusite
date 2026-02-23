@@ -24,7 +24,7 @@ import {
   FileCode,
   Terminal,
   Leaf,
-  Container,
+  Box,
   Cloud,
   GitBranch,
   Palette,
@@ -32,8 +32,6 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import { useState, useEffect, useMemo } from "react"
-import Image from "next/image"
-import { createClient } from "@/lib/supabase/client"
 
 const iconMap: Record<string, LucideIcon> = {
   Code2,
@@ -43,7 +41,7 @@ const iconMap: Record<string, LucideIcon> = {
   Terminal,
   Database,
   Leaf,
-  Container,
+  Container: Box,
   Cloud,
   GitBranch,
   Palette,
