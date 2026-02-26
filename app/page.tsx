@@ -301,20 +301,26 @@ export default function PortfolioPage() {
           style={{ animationDelay: "-8s" }}
         />
 
-        {/* Particles */}
+        {/* Particles - using deterministic values to avoid hydration mismatch */}
         <div className="absolute inset-0 overflow-hidden">
-          {[...Array(30)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-1 h-1 bg-purple-400/30 rounded-full animate-particles"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 20}s`,
-                animationDuration: `${20 + Math.random() * 10}s`,
-              }}
-            />
-          ))}
+          {[...Array(30)].map((_, i) => {
+            const left = ((i * 17 + 23) % 100)
+            const top = ((i * 31 + 47) % 100)
+            const delay = ((i * 7) % 20)
+            const duration = 20 + ((i * 3) % 10)
+            return (
+              <div
+                key={i}
+                className="absolute w-1 h-1 bg-purple-400/30 rounded-full animate-particles"
+                style={{
+                  left: `${left}%`,
+                  top: `${top}%`,
+                  animationDelay: `${delay}s`,
+                  animationDuration: `${duration}s`,
+                }}
+              />
+            )
+          })}
         </div>
       </div>
 
