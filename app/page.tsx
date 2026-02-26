@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import Image from "next/image"
 import { SocialFloat } from "@/components/social-float"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
