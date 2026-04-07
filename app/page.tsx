@@ -32,8 +32,7 @@ import {
   Share2,
   type LucideIcon,
 } from "lucide-react"
-import { useState, useEffect, useMemo } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { useState, useEffect } from "react"
 
 const iconMap: Record<string, LucideIcon> = {
   Code2,
@@ -107,90 +106,42 @@ export default function PortfolioPage() {
   const [skills, setSkills] = useState<Skill[]>([])
   const [loadingSkills, setLoadingSkills] = useState(true)
 
-  const supabase = useMemo(() => createClient(), [])
-
+  // Fetch all portfolio data from API (PostgreSQL)
   useEffect(() => {
-    if (!supabase) {
-      console.log("[v0] Supabase client is null - env vars missing")
-      setLoadingProjects(false)
-      setLoadingAbout(false)
-      setLoadingSkills(false)
-      return
-    }
-
-    console.log("[v0] Supabase client created, fetching data...")
-
-    const fetchProjects = async () => {
-      setLoadingProjects(true)
-      const { data, error } = await supabase
-        .from("portfolio_projects")
-        .select("*")
-        .order("display_order", { ascending: true })
-
-      console.log("[v0] Projects fetch result:", { data, error })
-      if (!error && data) {
-        setProjects(data)
-      }
-      setLoadingProjects(false)
-    }
-
-    const fetchAbout = async () => {
+    const fetchPortfolioData = async () => {
       try {
-        const { data, error } = await supabase
-          .from("portfolio_about")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .single()
-
-        console.log("[v0] About fetch result:", { data, error })
-        if (!error && data) {
-          setAboutData({
-            description: data.description || aboutData.description,
-            projects_count: data.projects_count || 50,
-            clients_count: data.clients_count || 100,
-            years_experience: data.years_experience || 5,
-          })
+        const response = await fetch("/api/portfolio")
+        if (response.ok) {
+          const data = await response.json()
+          
+          if (data.about) {
+            setAboutData({
+              description: data.about.description || aboutData.description,
+              projects_count: data.about.projects_count || 50,
+              clients_count: data.about.clients_count || 100,
+              years_experience: data.about.years_experience || 5,
+            })
+          }
+          
+          if (data.skills) {
+            setSkills(data.skills)
+          }
+          
+          if (data.projects) {
+            setProjects(data.projects)
+          }
         }
       } catch (error) {
-        console.error("[v0] Error fetching about:", error)
+        console.error("Error fetching portfolio data:", error)
       } finally {
+        setLoadingProjects(false)
         setLoadingAbout(false)
-      }
-    }
-
-    const fetchSkills = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("portfolio_skills")
-          .select("*")
-          .order("display_order", { ascending: true })
-
-        console.log("[v0] Skills fetch result:", { data, error })
-        if (!error && data) {
-          setSkills(data)
-        }
-      } catch (error) {
-        console.error("[v0] Error fetching skills:", error)
-      } finally {
         setLoadingSkills(false)
       }
     }
 
-    fetchProjects()
-    fetchAbout()
-    fetchSkills()
-
-    // Subscribe to realtime changes
-    const channel = supabase
-      .channel("portfolio_projects_public")
-      .on("postgres_changes", { event: "*", schema: "public", table: "portfolio_projects" }, fetchProjects)
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [supabase])
+    fetchPortfolioData()
+  }, [])
 
   useEffect(() => {
     const observerOptions = {
@@ -224,19 +175,14 @@ export default function PortfolioPage() {
     setIsSubmitting(true)
 
     try {
-      if (supabase) {
-        await supabase.from("portfolio_contacts").insert({
-          name: formData.name,
-          company: formData.company,
-          email: formData.email,
-          phone: formData.phone,
-          subject: formData.subject,
-          budget: formData.budget,
-          deadline: formData.deadline,
-          message: formData.message,
-        })
-      }
+      // Salvar no PostgreSQL da VPS
+      const response = await fetch("/api/portfolio/contacts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      })
 
+      // Tambem enviar email via API de contato existente
       await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -252,7 +198,7 @@ export default function PortfolioPage() {
         }),
       })
 
-      if (!error) {
+      if (response.ok) {
         setSubmitSuccess(true)
         setFormData({
           name: "",
