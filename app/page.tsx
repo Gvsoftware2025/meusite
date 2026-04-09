@@ -168,11 +168,17 @@ export default function PortfolioPage() {
       })
     }, observerOptions)
 
-    const elements = document.querySelectorAll(".scroll-reveal")
-    elements.forEach((el) => observer.observe(el))
+    // Small delay to ensure DOM is updated after state changes
+    const timeoutId = setTimeout(() => {
+      const elements = document.querySelectorAll(".scroll-reveal")
+      elements.forEach((el) => observer.observe(el))
+    }, 100)
 
-    return () => observer.disconnect()
-  }, [])
+    return () => {
+      clearTimeout(timeoutId)
+      observer.disconnect()
+    }
+  }, [skills, projects, loadingSkills, loadingProjects])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
