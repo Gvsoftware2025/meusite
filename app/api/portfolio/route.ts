@@ -5,9 +5,9 @@ import { query, queryOne } from "@/lib/db"
 export async function GET() {
   try {
     const [about, skills, projects] = await Promise.all([
-      queryOne(`SELECT * FROM portfolio_about ORDER BY created_at DESC LIMIT 1`),
-      query(`SELECT * FROM portfolio_skills ORDER BY display_order ASC`),
-      query(`SELECT * FROM portfolio_projects ORDER BY display_order ASC`),
+      queryOne(`SELECT * FROM meusite.portfolio_about ORDER BY created_at DESC LIMIT 1`),
+      query(`SELECT * FROM meusite.portfolio_skills ORDER BY display_order ASC`),
+      query(`SELECT * FROM meusite.portfolio_projects ORDER BY display_order ASC`),
     ])
 
     return NextResponse.json({

@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     }
 
     await query(
-      `INSERT INTO portfolio_contacts (name, company, email, phone, subject, budget, deadline, message)
+      `INSERT INTO meusite.portfolio_contacts (name, company, email, phone, subject, budget, deadline, message)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
       [name, company || "", email, phone || "", subject || "", budget || "", deadline || "", message || ""]
     )
