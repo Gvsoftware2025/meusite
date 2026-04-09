@@ -110,14 +110,10 @@ export default function PortfolioPage() {
   useEffect(() => {
     const fetchPortfolioData = async () => {
       try {
-        console.log("[v0] Fetching portfolio data...")
         const response = await fetch("/api/portfolio")
-        console.log("[v0] Response status:", response.status)
         
         if (response.ok) {
           const data = await response.json()
-          console.log("[v0] Data received:", data)
-          console.log("[v0] Skills from API:", data.skills?.length, "items")
           
           if (data.about) {
             setAboutData({
@@ -129,16 +125,12 @@ export default function PortfolioPage() {
           }
           
           if (data.skills && data.skills.length > 0) {
-            console.log("[v0] Setting skills:", data.skills)
             setSkills(data.skills)
           }
           
           if (data.projects) {
             setProjects(data.projects)
           }
-        } else {
-          const errorText = await response.text()
-          console.error("[v0] API error:", errorText)
         }
       } catch (error) {
         console.error("[v0] Error fetching portfolio data:", error)
@@ -566,260 +558,296 @@ export default function PortfolioPage() {
           </div>
         </section>
 
-        {/* Seção de Contato - ATUALIZADA */}
-        <section id="contato" className="relative py-32 px-6">
-          <div className="container mx-auto max-w-5xl">
-            <div className="text-center mb-16 scroll-reveal slide-down">
-              <h2 className="text-5xl font-bold text-white mb-4">
-                Entre em <span className="text-gradient">Contato</span>
+        {/* Seção de Contato - REDESENHADA */}
+        <section id="contato" className="relative py-32 px-6 overflow-hidden">
+          {/* Background decorativo */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-1/4 -left-32 w-96 h-96 bg-purple-600/20 rounded-full blur-[120px]" />
+            <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-cyan-600/20 rounded-full blur-[120px]" />
+          </div>
+
+          <div className="container mx-auto max-w-7xl relative z-10">
+            {/* Header */}
+            <div className="text-center mb-20 scroll-reveal slide-down">
+              <span className="inline-block px-4 py-2 rounded-full bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border border-purple-500/30 text-sm font-medium text-purple-300 mb-6">
+                Vamos Conversar
+              </span>
+              <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
+                Transforme sua <span className="text-gradient">Visao</span> em{" "}
+                <span className="text-gradient">Realidade</span>
               </h2>
-              <p className="text-xl text-gray-300">Vamos transformar sua ideia em realidade</p>
+              <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+                Estamos prontos para entender seu projeto e criar solucoes sob medida para o seu negocio
+              </p>
             </div>
 
-            <div className="glass-card rounded-3xl p-8 md:p-12 scroll-reveal zoom-in delay-200">
-              <div className="grid md:grid-cols-3 gap-6 mb-12">
-                <a href="mailto:contato.gvsoftware@gmail.com" className="glass-card rounded-xl p-6 hover-lift group">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <Mail className="w-6 h-6 text-white" />
+            <div className="grid lg:grid-cols-5 gap-8">
+              {/* Lado esquerdo - Info cards */}
+              <div className="lg:col-span-2 space-y-6 scroll-reveal slide-right">
+                {/* Card principal */}
+                <div className="glass-card rounded-3xl p-8 border border-white/10 relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-transparent to-cyan-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="relative z-10">
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-6 shadow-lg shadow-purple-500/25">
+                      <Sparkles className="w-8 h-8 text-white" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-3">Projeto Personalizado</h3>
+                    <p className="text-gray-400 leading-relaxed">
+                      Cada projeto e unico. Desenvolvemos solucoes 100% personalizadas para atender as necessidades especificas do seu negocio.
+                    </p>
                   </div>
-                  <h3 className="text-lg font-semibold text-white mb-1">E-mail</h3>
-                  <p className="text-gray-400">contato.gvsoftware@gmail.com</p>
-                </a>
+                </div>
 
-                <a href="tel:+5517997853416" className="glass-card rounded-xl p-6 hover-lift group">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <Phone className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-white mb-1">Telefone</h3>
-                  <p className="text-gray-400">(17) 99785-3416</p>
-                </a>
+                {/* Cards de contato */}
+                <div className="grid grid-cols-1 gap-4">
+                  <a 
+                    href="mailto:contato.gvsoftware@gmail.com" 
+                    className="glass-card rounded-2xl p-5 border border-white/10 flex items-center gap-4 group hover:border-purple-500/50 transition-all duration-300"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-lg shadow-purple-500/20">
+                      <Mail className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-500 mb-0.5">E-mail</p>
+                      <p className="text-white font-medium truncate">contato.gvsoftware@gmail.com</p>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-gray-500 group-hover:text-purple-400 group-hover:translate-x-1 transition-all" />
+                  </a>
 
-                <a
-                  href="https://www.instagram.com/gv_software/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="glass-card rounded-xl p-6 hover-lift group"
-                >
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-pink-500 via-purple-500 to-orange-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <Instagram className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-white mb-1">Instagram</h3>
-                  <p className="text-gray-400">@gv_software</p>
-                </a>
+                  <a 
+                    href="https://wa.me/5517997853416" 
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="glass-card rounded-2xl p-5 border border-white/10 flex items-center gap-4 group hover:border-green-500/50 transition-all duration-300"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-lg shadow-green-500/20">
+                      <Phone className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-500 mb-0.5">WhatsApp</p>
+                      <p className="text-white font-medium">(17) 99785-3416</p>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-gray-500 group-hover:text-green-400 group-hover:translate-x-1 transition-all" />
+                  </a>
+
+                  <a
+                    href="https://www.instagram.com/gv_software/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="glass-card rounded-2xl p-5 border border-white/10 flex items-center gap-4 group hover:border-pink-500/50 transition-all duration-300"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 via-purple-500 to-orange-500 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-lg shadow-pink-500/20">
+                      <Instagram className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-500 mb-0.5">Instagram</p>
+                      <p className="text-white font-medium">@gv_software</p>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-gray-500 group-hover:text-pink-400 group-hover:translate-x-1 transition-all" />
+                  </a>
+                </div>
               </div>
 
-              {submitSuccess && (
-                <div className="mb-8 p-4 rounded-xl bg-green-500/20 border border-green-500/50 flex items-center gap-3">
-                  <CheckCircle2 className="w-6 h-6 text-green-400" />
-                  <p className="text-green-400 font-medium">
-                    Mensagem enviada com sucesso! Entraremos em contato em breve.
-                  </p>
-                </div>
-              )}
+              {/* Lado direito - Formulario */}
+              <div className="lg:col-span-3 scroll-reveal slide-left delay-200">
+                <div className="glass-card rounded-3xl p-8 md:p-10 border border-white/10 relative overflow-hidden">
+                  {/* Decoracao do form */}
+                  <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-purple-500/20 to-transparent rounded-full blur-3xl" />
+                  <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-cyan-500/20 to-transparent rounded-full blur-3xl" />
+                  
+                  <div className="relative z-10">
+                    <h3 className="text-2xl font-bold text-white mb-2">Envie sua mensagem</h3>
+                    <p className="text-gray-400 mb-8">Preencha o formulario e retornaremos em ate 24 horas</p>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Linha 1: Nome e Empresa */}
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="relative">
-                    <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                    <Input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      placeholder="Seu nome completo *"
-                      required
-                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 transition-all"
-                    />
-                  </div>
-                  <div className="relative">
-                    <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                    <Input
-                      type="text"
-                      name="company"
-                      value={formData.company}
-                      onChange={handleInputChange}
-                      placeholder="Nome da empresa (opcional)"
-                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 transition-all"
-                    />
-                  </div>
-                </div>
+                    {submitSuccess && (
+                      <div className="mb-6 p-4 rounded-2xl bg-green-500/10 border border-green-500/30 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
+                          <CheckCircle2 className="w-5 h-5 text-green-400" />
+                        </div>
+                        <p className="text-green-400 font-medium">
+                          Mensagem enviada com sucesso! Retornaremos em breve.
+                        </p>
+                      </div>
+                    )}
 
-                {/* Linha 2: Email e Telefone */}
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                    <Input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      placeholder="Seu melhor e-mail *"
-                      required
-                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 transition-all"
-                    />
-                  </div>
-                  <div className="relative">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                    <Input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      placeholder="WhatsApp / Telefone *"
-                      required
-                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 transition-all"
-                    />
-                  </div>
-                </div>
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                    {/* Linha 1: Nome e Empresa */}
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="relative group">
+                        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl opacity-0 group-focus-within:opacity-100 blur transition-opacity" />
+                        <div className="relative">
+                          <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-purple-400 transition-colors" />
+                          <Input
+                            type="text"
+                            name="name"
+                            value={formData.name}
+                            onChange={handleInputChange}
+                            placeholder="Seu nome completo *"
+                            required
+                            className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/[0.03] border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.05] transition-all"
+                          />
+                        </div>
+                      </div>
+                      <div className="relative group">
+                        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl opacity-0 group-focus-within:opacity-100 blur transition-opacity" />
+                        <div className="relative">
+                          <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-purple-400 transition-colors" />
+                          <Input
+                            type="text"
+                            name="company"
+                            value={formData.company}
+                            onChange={handleInputChange}
+                            placeholder="Empresa (opcional)"
+                            className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/[0.03] border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.05] transition-all"
+                          />
+                        </div>
+                      </div>
+                    </div>
 
-                {/* Linha 3: Assunto */}
-                <div className="relative">
-                  <MessageCircle className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 z-10" />
-                  <select
-                    name="subject"
-                    value={formData.subject}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 transition-all appearance-none cursor-pointer"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                      backgroundRepeat: "no-repeat",
-                      backgroundPosition: "right 1rem center",
-                      backgroundSize: "1.5rem",
-                    }}
-                  >
-                    <option value="" disabled className="bg-[#0a0118] text-gray-400">
-                      Qual o assunto? *
-                    </option>
-                    <option value="Site Institucional" className="bg-[#0a0118] text-white">
-                      Site Institucional
-                    </option>
-                    <option value="Loja Virtual / E-commerce" className="bg-[#0a0118] text-white">
-                      Loja Virtual / E-commerce
-                    </option>
-                    <option value="Sistema Web / Aplicativo" className="bg-[#0a0118] text-white">
-                      Sistema Web / Aplicativo
-                    </option>
-                    <option value="Landing Page" className="bg-[#0a0118] text-white">
-                      Landing Page
-                    </option>
-                    <option value="Manutenção / Suporte" className="bg-[#0a0118] text-white">
-                      Manutenção / Suporte
-                    </option>
-                    <option value="Consultoria" className="bg-[#0a0118] text-white">
-                      Consultoria
-                    </option>
-                    <option value="Outro" className="bg-[#0a0118] text-white">
-                      Outro
-                    </option>
-                  </select>
-                </div>
+                    {/* Linha 2: Email e Telefone */}
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="relative group">
+                        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl opacity-0 group-focus-within:opacity-100 blur transition-opacity" />
+                        <div className="relative">
+                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-purple-400 transition-colors" />
+                          <Input
+                            type="email"
+                            name="email"
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            placeholder="Seu melhor e-mail *"
+                            required
+                            className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/[0.03] border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.05] transition-all"
+                          />
+                        </div>
+                      </div>
+                      <div className="relative group">
+                        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl opacity-0 group-focus-within:opacity-100 blur transition-opacity" />
+                        <div className="relative">
+                          <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-purple-400 transition-colors" />
+                          <Input
+                            type="tel"
+                            name="phone"
+                            value={formData.phone}
+                            onChange={handleInputChange}
+                            placeholder="WhatsApp *"
+                            required
+                            className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/[0.03] border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.05] transition-all"
+                          />
+                        </div>
+                      </div>
+                    </div>
 
-                {/* Linha 4: Orçamento e Prazo */}
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <select
-                      name="budget"
-                      value={formData.budget}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-4 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 transition-all appearance-none cursor-pointer"
-                      style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                        backgroundRepeat: "no-repeat",
-                        backgroundPosition: "right 1rem center",
-                        backgroundSize: "1.5rem",
-                      }}
+                    {/* Linha 3: Assunto */}
+                    <div className="relative group">
+                      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl opacity-0 group-focus-within:opacity-100 blur transition-opacity" />
+                      <div className="relative">
+                        <MessageCircle className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-purple-400 transition-colors z-10" />
+                        <select
+                          name="subject"
+                          value={formData.subject}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full pl-12 pr-10 py-4 rounded-xl bg-white/[0.03] border border-white/10 text-white focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.05] transition-all appearance-none cursor-pointer"
+                          style={{
+                            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                            backgroundRepeat: "no-repeat",
+                            backgroundPosition: "right 1rem center",
+                            backgroundSize: "1.25rem",
+                          }}
+                        >
+                          <option value="" disabled className="bg-[#0a0a0a]">Tipo de projeto *</option>
+                          <option value="Site Institucional" className="bg-[#0a0a0a]">Site Institucional</option>
+                          <option value="Loja Virtual / E-commerce" className="bg-[#0a0a0a]">Loja Virtual / E-commerce</option>
+                          <option value="Sistema Web / Aplicativo" className="bg-[#0a0a0a]">Sistema Web / Aplicativo</option>
+                          <option value="Landing Page" className="bg-[#0a0a0a]">Landing Page</option>
+                          <option value="Manutenção / Suporte" className="bg-[#0a0a0a]">Manutencao / Suporte</option>
+                          <option value="Consultoria" className="bg-[#0a0a0a]">Consultoria</option>
+                          <option value="Outro" className="bg-[#0a0a0a]">Outro</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Linha 4: Orçamento e Prazo */}
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <select
+                        name="budget"
+                        value={formData.budget}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-4 rounded-xl bg-white/[0.03] border border-white/10 text-white focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.05] transition-all appearance-none cursor-pointer"
+                        style={{
+                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                          backgroundRepeat: "no-repeat",
+                          backgroundPosition: "right 1rem center",
+                          backgroundSize: "1.25rem",
+                        }}
+                      >
+                        <option value="" className="bg-[#0a0a0a]">Orcamento (opcional)</option>
+                        <option value="Até R$ 1.000" className="bg-[#0a0a0a]">Ate R$ 1.000</option>
+                        <option value="R$ 1.000 - R$ 3.000" className="bg-[#0a0a0a]">R$ 1.000 - R$ 3.000</option>
+                        <option value="R$ 3.000 - R$ 5.000" className="bg-[#0a0a0a]">R$ 3.000 - R$ 5.000</option>
+                        <option value="R$ 5.000 - R$ 10.000" className="bg-[#0a0a0a]">R$ 5.000 - R$ 10.000</option>
+                        <option value="Acima de R$ 10.000" className="bg-[#0a0a0a]">Acima de R$ 10.000</option>
+                      </select>
+                      <select
+                        name="deadline"
+                        value={formData.deadline}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-4 rounded-xl bg-white/[0.03] border border-white/10 text-white focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.05] transition-all appearance-none cursor-pointer"
+                        style={{
+                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                          backgroundRepeat: "no-repeat",
+                          backgroundPosition: "right 1rem center",
+                          backgroundSize: "1.25rem",
+                        }}
+                      >
+                        <option value="" className="bg-[#0a0a0a]">Prazo (opcional)</option>
+                        <option value="Urgente (até 1 semana)" className="bg-[#0a0a0a]">Urgente (ate 1 semana)</option>
+                        <option value="Curto (1-2 semanas)" className="bg-[#0a0a0a]">Curto (1-2 semanas)</option>
+                        <option value="Médio (2-4 semanas)" className="bg-[#0a0a0a]">Medio (2-4 semanas)</option>
+                        <option value="Flexível (1-2 meses)" className="bg-[#0a0a0a]">Flexivel (1-2 meses)</option>
+                        <option value="Sem pressa" className="bg-[#0a0a0a]">Sem pressa</option>
+                      </select>
+                    </div>
+
+                    {/* Linha 5: Mensagem */}
+                    <div className="relative group">
+                      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl opacity-0 group-focus-within:opacity-100 blur transition-opacity" />
+                      <Textarea
+                        name="message"
+                        value={formData.message}
+                        onChange={handleInputChange}
+                        placeholder="Conte-nos sobre seu projeto... *"
+                        required
+                        rows={4}
+                        className="relative w-full px-4 py-4 rounded-xl bg-white/[0.03] border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.05] transition-all resize-none"
+                      />
+                    </div>
+
+                    {/* Botao de envio */}
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full h-14 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-[length:200%_100%] hover:bg-[position:100%_0] border-0 text-base font-semibold rounded-xl hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300 disabled:opacity-50"
                     >
-                      <option value="" className="bg-[#0a0118] text-gray-400">
-                        Orçamento estimado (opcional)
-                      </option>
-                      <option value="Até R$ 1.000" className="bg-[#0a0118] text-white">
-                        Até R$ 1.000
-                      </option>
-                      <option value="R$ 1.000 - R$ 3.000" className="bg-[#0a0118] text-white">
-                        R$ 1.000 - R$ 3.000
-                      </option>
-                      <option value="R$ 3.000 - R$ 5.000" className="bg-[#0a0118] text-white">
-                        R$ 3.000 - R$ 5.000
-                      </option>
-                      <option value="R$ 5.000 - R$ 10.000" className="bg-[#0a0118] text-white">
-                        R$ 5.000 - R$ 10.000
-                      </option>
-                      <option value="Acima de R$ 10.000" className="bg-[#0a0118] text-white">
-                        Acima de R$ 10.000
-                      </option>
-                    </select>
-                  </div>
-                  <div>
-                    <select
-                      name="deadline"
-                      value={formData.deadline}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-4 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 transition-all appearance-none cursor-pointer"
-                      style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                        backgroundRepeat: "no-repeat",
-                        backgroundPosition: "right 1rem center",
-                        backgroundSize: "1.5rem",
-                      }}
-                    >
-                      <option value="" className="bg-[#0a0118] text-gray-400">
-                        Prazo desejado (opcional)
-                      </option>
-                      <option value="Urgente (até 1 semana)" className="bg-[#0a0118] text-white">
-                        Urgente (até 1 semana)
-                      </option>
-                      <option value="Curto (1-2 semanas)" className="bg-[#0a0118] text-white">
-                        Curto (1-2 semanas)
-                      </option>
-                      <option value="Médio (2-4 semanas)" className="bg-[#0a0118] text-white">
-                        Médio (2-4 semanas)
-                      </option>
-                      <option value="Flexível (1-2 meses)" className="bg-[#0a0118] text-white">
-                        Flexível (1-2 meses)
-                      </option>
-                      <option value="Sem pressa" className="bg-[#0a0118] text-white">
-                        Sem pressa
-                      </option>
-                    </select>
+                      {isSubmitting ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                          Enviando...
+                        </>
+                      ) : (
+                        <>
+                          Enviar Mensagem
+                          <ArrowRight className="w-5 h-5 ml-2" />
+                        </>
+                      )}
+                    </Button>
+
+                    <p className="text-center text-gray-500 text-sm">* Campos obrigatorios</p>
+                  </form>
                   </div>
                 </div>
-
-                {/* Linha 5: Mensagem */}
-                <div>
-                  <Textarea
-                    name="message"
-                    value={formData.message}
-                    onChange={handleInputChange}
-                    placeholder="Conte-nos mais sobre seu projeto... O que você precisa? Quais funcionalidades? *"
-                    required
-                    rows={5}
-                    className="w-full px-4 py-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 transition-all resize-none"
-                  />
-                </div>
-
-                {/* Botão de envio */}
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-[length:200%_100%] hover:bg-[position:100%_0] border-0 text-lg py-6 hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                      Enviando...
-                    </>
-                  ) : (
-                    <>
-                      <ArrowRight className="w-5 h-5 mr-2" />
-                      Enviar Mensagem
-                    </>
-                  )}
-                </Button>
-
-                <p className="text-center text-gray-500 text-sm">Campos marcados com * são obrigatórios</p>
-              </form>
+              </div>
             </div>
           </div>
         </section>
