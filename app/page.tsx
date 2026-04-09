@@ -110,9 +110,14 @@ export default function PortfolioPage() {
   useEffect(() => {
     const fetchPortfolioData = async () => {
       try {
+        console.log("[v0] Fetching portfolio data...")
         const response = await fetch("/api/portfolio")
+        console.log("[v0] Response status:", response.status)
+        
         if (response.ok) {
           const data = await response.json()
+          console.log("[v0] Data received:", data)
+          console.log("[v0] Skills from API:", data.skills?.length, "items")
           
           if (data.about) {
             setAboutData({
@@ -123,16 +128,20 @@ export default function PortfolioPage() {
             })
           }
           
-          if (data.skills) {
+          if (data.skills && data.skills.length > 0) {
+            console.log("[v0] Setting skills:", data.skills)
             setSkills(data.skills)
           }
           
           if (data.projects) {
             setProjects(data.projects)
           }
+        } else {
+          const errorText = await response.text()
+          console.error("[v0] API error:", errorText)
         }
       } catch (error) {
-        console.error("Error fetching portfolio data:", error)
+        console.error("[v0] Error fetching portfolio data:", error)
       } finally {
         setLoadingProjects(false)
         setLoadingAbout(false)
