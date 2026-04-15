@@ -3,6 +3,7 @@
 import type React from "react"
 import Image from "next/image"
 import { SocialFloat } from "@/components/social-float"
+import { ProjectCard } from "@/components/project-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -56,10 +57,14 @@ interface Project {
   id: string
   title: string
   description: string
-  image_url: string
-  technologies: string[]
-  is_featured: boolean
-  display_order: number
+  image_url?: string
+  images?: string[] | string
+  project_url?: string
+  github_url?: string
+  technologies?: string[]
+  is_featured?: boolean
+  show_link?: boolean
+  display_order?: number
 }
 
 interface Skill {
@@ -500,59 +505,46 @@ export default function PortfolioPage() {
           </div>
         </section>
 
-        <section id="projetos" className="py-32 px-6">
-          <div className="container mx-auto max-w-7xl">
+        <section id="projetos" className="relative py-32 px-6 overflow-hidden">
+          {/* Background decorativo */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-1/3 -right-48 w-[500px] h-[500px] bg-purple-600/15 rounded-full blur-[150px]" />
+            <div className="absolute bottom-1/3 -left-48 w-[500px] h-[500px] bg-cyan-600/15 rounded-full blur-[150px]" />
+          </div>
+
+          <div className="container mx-auto max-w-7xl relative z-10">
             <div className="text-center mb-16 scroll-reveal slide-down">
-              <h2 className="text-5xl font-bold text-white mb-4">
+              <span className="inline-block px-4 py-2 rounded-full bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border border-purple-500/30 text-sm font-medium text-purple-300 mb-6">
+                Portfolio
+              </span>
+              <h2 className="text-5xl md:text-6xl font-bold text-white mb-4">
                 Nossos <span className="text-gradient">Projetos</span>
               </h2>
-              <p className="text-xl text-gray-300">Conheça alguns dos nossos trabalhos mais recentes</p>
+              <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+                Conheca alguns dos nossos trabalhos mais recentes e veja como transformamos ideias em solucoes digitais
+              </p>
             </div>
 
             {loadingProjects ? (
               <div className="flex justify-center items-center py-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-full border-4 border-purple-500/20 border-t-purple-500 animate-spin" />
+                  <div className="absolute inset-0 w-16 h-16 rounded-full border-4 border-transparent border-r-cyan-500/50 animate-spin" style={{ animationDirection: "reverse", animationDuration: "1.5s" }} />
+                </div>
               </div>
             ) : projects.length === 0 ? (
               <div className="text-center py-20">
-                <Folder className="w-16 h-16 text-gray-500 mx-auto mb-4" />
-                <p className="text-gray-400 text-lg">Nenhum projeto cadastrado ainda.</p>
+                <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-white/5 flex items-center justify-center">
+                  <Folder className="w-12 h-12 text-gray-500" />
+                </div>
+                <p className="text-gray-400 text-lg mb-2">Nenhum projeto cadastrado ainda</p>
+                <p className="text-gray-500 text-sm">Os projetos aparecerao aqui assim que forem adicionados</p>
               </div>
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {projects.map((project, index) => {
-                  const animations = ["slide-left", "slide-up", "slide-right", "slide-right", "slide-up", "slide-left"]
-                  const delays = ["delay-100", "delay-200", "delay-300", "delay-100", "delay-200", "delay-300"]
-                  return (
-                    <div
-                      key={project.id}
-                      className={`glass-card rounded-2xl overflow-hidden hover-lift group cursor-pointer scroll-reveal ${animations[index % 6]} ${delays[index % 6]}`}
-                    >
-                      <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-purple-600/20 to-blue-600/20">
-                        <Image
-                          src={project.image_url || "/placeholder.svg"}
-                          alt={project.title}
-                          fill
-                          className="object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
-                      </div>
-                      <div className="p-6">
-                        <h3 className="text-xl font-semibold text-white mb-2">{project.title}</h3>
-                        <p className="text-gray-400 mb-4">{project.description}</p>
-                        <div className="flex flex-wrap gap-2">
-                          {project.technologies?.map((tag, i) => (
-                            <span
-                              key={i}
-                              className="px-3 py-1 text-xs rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
+                {projects.map((project, index) => (
+                  <ProjectCard key={project.id} project={project} index={index} />
+                ))}
               </div>
             )}
           </div>
