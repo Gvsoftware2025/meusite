@@ -111,13 +111,15 @@ export default function PortfolioPage() {
   const [skills, setSkills] = useState<Skill[]>([])
   const [loadingSkills, setLoadingSkills] = useState(true)
 
-  // Fetch all portfolio data from API (PostgreSQL)
+  // Fetch all portfolio data from API (PostgreSQL) with real-time polling
   useEffect(() => {
-    const fetchPortfolioData = async () => {
+    let isMounted = true
+    
+    const fetchPortfolioData = async (isInitial = false) => {
       try {
         const response = await fetch("/api/portfolio")
         
-        if (response.ok) {
+        if (response.ok && isMounted) {
           const data = await response.json()
           
           if (data.about) {
@@ -138,15 +140,28 @@ export default function PortfolioPage() {
           }
         }
       } catch (error) {
-        console.error("[v0] Error fetching portfolio data:", error)
+        // Silent error for polling
       } finally {
-        setLoadingProjects(false)
-        setLoadingAbout(false)
-        setLoadingSkills(false)
+        if (isInitial && isMounted) {
+          setLoadingProjects(false)
+          setLoadingAbout(false)
+          setLoadingSkills(false)
+        }
       }
     }
 
-    fetchPortfolioData()
+    // Fetch inicial
+    fetchPortfolioData(true)
+    
+    // Polling a cada 5 segundos para tempo real
+    const interval = setInterval(() => {
+      fetchPortfolioData(false)
+    }, 5000)
+
+    return () => {
+      isMounted = false
+      clearInterval(interval)
+    }
   }, [])
 
   useEffect(() => {
