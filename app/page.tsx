@@ -153,10 +153,10 @@ export default function PortfolioPage() {
     // Fetch inicial
     fetchPortfolioData(true)
     
-    // Polling a cada 5 segundos para tempo real
+    // Polling a cada 1 segundo para tempo real
     const interval = setInterval(() => {
       fetchPortfolioData(false)
-    }, 5000)
+    }, 1000)
 
     return () => {
       isMounted = false
