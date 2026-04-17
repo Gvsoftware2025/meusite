@@ -156,7 +156,7 @@ export default function AdminDashboard({
           {/* Logo */}
           <div className="p-6 border-b border-white/10">
             <div className="flex items-center gap-3">
-              <Image src="/images/gv-logo-3d.png" alt="GV Software" width={40} height={40} />
+              <Image src="/images/gv-logo-new.jpeg" alt="GV Software" width={40} height={40} className="rounded-lg" />
               <div>
                 <h1 className="text-white font-bold">GV Software</h1>
                 <p className="text-xs text-gray-400">Painel Admin</p>

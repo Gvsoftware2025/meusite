@@ -72,7 +72,8 @@ export function ProjectCard({ project, index }: ProjectCardProps) {
         <ProjectImageSlider
           images={images}
           title={project.title}
-          autoPlay={false}
+          autoPlay={true}
+          autoPlayInterval={3000}
         />
 
         {/* Content */}
@@ -151,11 +152,11 @@ export function ProjectCard({ project, index }: ProjectCardProps) {
               <X className="w-5 h-5" />
             </button>
 
-            {/* Image Slider */}
+            {/* Image Slider - sem autoplay no modal */}
             <ProjectImageSlider
               images={images}
               title={project.title}
-              autoPlay={true}
+              autoPlay={false}
               className="rounded-t-3xl"
             />
 

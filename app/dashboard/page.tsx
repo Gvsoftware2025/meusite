@@ -26,7 +26,7 @@ export default async function DashboardPage() {
         <div className="flex h-16 items-center gap-4 px-6">
           <div className="flex flex-1 items-center justify-between">
             <Link href="/dashboard" className="flex items-center gap-3 hover-lift">
-              <Image src="/images/gv-logo.png" alt="GV Software" width={40} height={40} className="animate-glow" />
+              <Image src="/images/gv-logo-new.jpeg" alt="GV Software" width={40} height={40} className="rounded-lg animate-glow" />
               <div>
                 <h1 className="text-xl font-bold text-white">GV Software</h1>
                 <p className="text-xs text-purple-300">Dashboard</p>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Image from "next/image"
-import { ChevronLeft, ChevronRight, X, Expand, Pause, Play } from "lucide-react"
+import { ChevronLeft, ChevronRight, X, Expand } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface ProjectImageSliderProps {
@@ -17,13 +17,11 @@ export function ProjectImageSlider({
   images,
   title,
   autoPlay = true,
-  autoPlayInterval = 4000,
+  autoPlayInterval = 3000,
   className,
 }: ProjectImageSliderProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(autoPlay)
   const [isFullscreen, setIsFullscreen] = useState(false)
-  const [isHovered, setIsHovered] = useState(false)
 
   // Garantir que temos pelo menos uma imagem
   const imageList = images && images.length > 0 ? images : ["/placeholder.svg"]
@@ -41,13 +39,13 @@ export function ProjectImageSlider({
     setCurrentIndex(index)
   }
 
-  // Autoplay
+  // Autoplay - apenas quando nao esta em fullscreen/modal
   useEffect(() => {
-    if (!isPlaying || !hasMultipleImages || isHovered) return
+    if (!autoPlay || !hasMultipleImages || isFullscreen) return
 
     const interval = setInterval(goToNext, autoPlayInterval)
     return () => clearInterval(interval)
-  }, [isPlaying, hasMultipleImages, isHovered, goToNext, autoPlayInterval])
+  }, [autoPlay, hasMultipleImages, isFullscreen, goToNext, autoPlayInterval])
 
   // Keyboard navigation
   useEffect(() => {
@@ -68,8 +66,6 @@ export function ProjectImageSlider({
       {/* Main Slider */}
       <div
         className={cn("relative group overflow-hidden rounded-xl", className)}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
       >
         {/* Images */}
         <div className="relative aspect-video overflow-hidden bg-black/20">
@@ -148,31 +144,17 @@ export function ProjectImageSlider({
             </div>
           )}
 
-          {/* Action buttons */}
-          <div className="flex items-center gap-2 ml-auto">
-            {hasMultipleImages && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setIsPlaying(!isPlaying)
-                }}
-                className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white hover:bg-black/70 transition-all"
-                aria-label={isPlaying ? "Pausar" : "Reproduzir"}
-              >
-                {isPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
-              </button>
-            )}
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                setIsFullscreen(true)
-              }}
-              className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white hover:bg-black/70 transition-all"
-              aria-label="Tela cheia"
-            >
-              <Expand className="w-3 h-3" />
-            </button>
-          </div>
+          {/* Fullscreen button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setIsFullscreen(true)
+            }}
+            className="ml-auto w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white hover:bg-black/70 transition-all"
+            aria-label="Tela cheia"
+          >
+            <Expand className="w-3 h-3" />
+          </button>
         </div>
 
         {/* Image counter */}
