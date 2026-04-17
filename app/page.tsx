@@ -981,18 +981,13 @@ export default function PortfolioPage() {
 
             {/* Bottom bar */}
             <div className="pt-8 border-t border-white/10">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                <p className="text-gray-500 text-sm">
-                  © 2025{" "}
-                  <span className="bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent font-semibold">
-                    GV Software
-                  </span>
-                  . Todos os direitos reservados.
-                </p>
-                <p className="text-gray-600 text-xs">
-                  Desenvolvido com dedicacao em Sao Paulo, Brasil
-                </p>
-              </div>
+              <p className="text-center text-gray-400 text-base md:text-lg">
+                © {new Date().getFullYear()}{" "}
+                <span className="bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent font-semibold">
+                  GV Software
+                </span>
+                . Todos os direitos reservados.
+              </p>
             </div>
           </div>
         </footer>
