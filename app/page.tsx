@@ -1,7 +1,9 @@
 "use client"
 
 import type React from "react"
+import Image from "next/image"
 import { SocialFloat } from "@/components/social-float"
+import { ProjectCard } from "@/components/project-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -20,20 +22,57 @@ import {
   Phone,
   Instagram,
   Briefcase,
+  Server,
+  FileCode,
+  Terminal,
+  Leaf,
+  Box,
+  Cloud,
+  GitBranch,
+  Palette,
+  Share2,
+  type LucideIcon,
 } from "lucide-react"
 import { useState, useEffect } from "react"
-import Image from "next/image"
-import { createClient } from "@/lib/supabase/client"
-import { createBrowserClient } from "@supabase/ssr"
+
+const iconMap: Record<string, LucideIcon> = {
+  Code2,
+  Zap,
+  Server,
+  FileCode,
+  Terminal,
+  Database,
+  Leaf,
+  Container: Box,
+  Cloud,
+  GitBranch,
+  Palette,
+  Share2,
+  Smartphone,
+  Sparkles,
+}
 
 // Interface for projects from database
 interface Project {
   id: string
   title: string
   description: string
-  image_url: string
-  technologies: string[]
-  is_featured: boolean
+  image_url?: string
+  images?: string[] | string
+  project_url?: string
+  github_url?: string
+  technologies?: string[]
+  is_featured?: boolean
+  show_link?: boolean
+  display_order?: number
+}
+
+interface Skill {
+  id: string
+  name: string
+  icon: string
+  color: string
+  category: string
   display_order: number
 }
 
@@ -69,72 +108,60 @@ export default function PortfolioPage() {
     years_experience: 5,
   })
   const [loadingAbout, setLoadingAbout] = useState(true)
+  const [skills, setSkills] = useState<Skill[]>([])
+  const [loadingSkills, setLoadingSkills] = useState(true)
 
-  const supabase = createClient()
-
+  // Fetch all portfolio data from API (PostgreSQL) with real-time polling
   useEffect(() => {
-    const fetchProjects = async () => {
-      setLoadingProjects(true)
-      const { data, error } = await supabase
-        .from("portfolio_projects")
-        .select("*")
-        .order("display_order", { ascending: true })
-
-      if (!error && data) {
-        setProjects(data)
-      }
-      setLoadingProjects(false)
-    }
-
-    fetchProjects()
-
-    // Subscribe to realtime changes
-    const channel = supabase
-      .channel("portfolio_projects_public")
-      .on("postgres_changes", { event: "*", schema: "public", table: "portfolio_projects" }, fetchProjects)
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [supabase])
-
-  useEffect(() => {
-    const fetchAbout = async () => {
+    let isMounted = true
+    
+    const fetchPortfolioData = async (isInitial = false) => {
       try {
-        const supabaseBrowser = createBrowserClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        )
-
-        const { data, error } = await supabaseBrowser
-          .from("portfolio_about")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .single()
-
-        if (error) {
-          console.error("Error fetching about:", error)
-          return
-        }
-
-        if (data) {
-          setAboutData({
-            description: data.description || aboutData.description,
-            projects_count: data.projects_count || 50,
-            clients_count: data.clients_count || 100,
-            years_experience: data.years_experience || 5,
-          })
+        const response = await fetch("/api/portfolio")
+        
+        if (response.ok && isMounted) {
+          const data = await response.json()
+          
+          if (data.about) {
+            setAboutData({
+              description: data.about.description || aboutData.description,
+              projects_count: data.about.projects_count || 50,
+              clients_count: data.about.clients_count || 100,
+              years_experience: data.about.years_experience || 5,
+            })
+          }
+          
+          if (data.skills && data.skills.length > 0) {
+            setSkills(data.skills)
+          }
+          
+          if (data.projects) {
+            setProjects(data.projects)
+          }
         }
       } catch (error) {
-        console.error("Error:", error)
+        // Silent error for polling
       } finally {
-        setLoadingAbout(false)
+        if (isInitial && isMounted) {
+          setLoadingProjects(false)
+          setLoadingAbout(false)
+          setLoadingSkills(false)
+        }
       }
     }
 
-    fetchAbout()
+    // Fetch inicial
+    fetchPortfolioData(true)
+    
+    // Polling a cada 1 segundo para tempo real
+    const interval = setInterval(() => {
+      fetchPortfolioData(false)
+    }, 1000)
+
+    return () => {
+      isMounted = false
+      clearInterval(interval)
+    }
   }, [])
 
   useEffect(() => {
@@ -153,26 +180,17 @@ export default function PortfolioPage() {
       })
     }, observerOptions)
 
-    const elements = document.querySelectorAll(".scroll-reveal")
-    elements.forEach((el) => observer.observe(el))
+    // Small delay to ensure DOM is updated after state changes
+    const timeoutId = setTimeout(() => {
+      const elements = document.querySelectorAll(".scroll-reveal")
+      elements.forEach((el) => observer.observe(el))
+    }, 100)
 
-    return () => observer.disconnect()
-  }, [])
-
-  const skills = [
-    { name: "React.js", icon: Code2 },
-    { name: "Next.js", icon: Zap },
-    { name: "Node.js", icon: Smartphone },
-    { name: "TypeScript", icon: Sparkles },
-    { name: "Python", icon: "🐍", isEmoji: true },
-    { name: "PostgreSQL", icon: Database }, // removed isEmoji: true since Database is a component
-    { name: "MongoDB", icon: "🍃", isEmoji: true },
-    { name: "Docker", icon: "🐳", isEmoji: true },
-    { name: "AWS", icon: "☁️", isEmoji: true },
-    { name: "Git", icon: "📦", isEmoji: true },
-    { name: "TailwindCSS", icon: "🎨", isEmoji: true },
-    { name: "GraphQL", icon: "◈", isEmoji: true },
-  ]
+    return () => {
+      clearTimeout(timeoutId)
+      observer.disconnect()
+    }
+  }, [skills, projects, loadingSkills, loadingProjects])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -184,17 +202,14 @@ export default function PortfolioPage() {
     setIsSubmitting(true)
 
     try {
-      const { error } = await supabase.from("portfolio_contacts").insert({
-        name: formData.name,
-        company: formData.company,
-        email: formData.email,
-        phone: formData.phone,
-        subject: formData.subject,
-        budget: formData.budget,
-        deadline: formData.deadline,
-        message: formData.message,
+      // Salvar no PostgreSQL da VPS
+      const response = await fetch("/api/portfolio/contacts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
       })
 
+      // Tambem enviar email via API de contato existente
       await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -210,7 +225,7 @@ export default function PortfolioPage() {
         }),
       })
 
-      if (!error) {
+      if (response.ok) {
         setSubmitSuccess(true)
         setFormData({
           name: "",
@@ -259,20 +274,26 @@ export default function PortfolioPage() {
           style={{ animationDelay: "-8s" }}
         />
 
-        {/* Particles */}
+        {/* Particles - using deterministic values to avoid hydration mismatch */}
         <div className="absolute inset-0 overflow-hidden">
-          {[...Array(30)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-1 h-1 bg-purple-400/30 rounded-full animate-particles"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 20}s`,
-                animationDuration: `${20 + Math.random() * 10}s`,
-              }}
-            />
-          ))}
+          {[...Array(30)].map((_, i) => {
+            const left = ((i * 17 + 23) % 100)
+            const top = ((i * 31 + 47) % 100)
+            const delay = ((i * 7) % 20)
+            const duration = 20 + ((i * 3) % 10)
+            return (
+              <div
+                key={i}
+                className="absolute w-1 h-1 bg-purple-400/30 rounded-full animate-particles"
+                style={{
+                  left: `${left}%`,
+                  top: `${top}%`,
+                  animationDelay: `${delay}s`,
+                  animationDuration: `${duration}s`,
+                }}
+              />
+            )
+          })}
         </div>
       </div>
 
@@ -468,356 +489,372 @@ export default function PortfolioPage() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {skills.map((skill, index) => {
-                const Icon = skill.icon
-                const delays = [
-                  "delay-100",
-                  "delay-200",
-                  "delay-300",
-                  "delay-400",
-                  "delay-100",
-                  "delay-200",
-                  "delay-300",
-                  "delay-400",
-                  "delay-100",
-                  "delay-200",
-                  "delay-300",
-                  "delay-400",
-                ]
-                return (
-                  <div
-                    key={index}
-                    className={`glass-card rounded-2xl p-8 hover-lift group cursor-pointer scroll-reveal zoom-in ${delays[index]}`}
-                  >
-                    <div
-                      className={`w-16 h-16 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}
-                    >
-                      {skill.isEmoji ? (
-                        <span className="text-4xl">{Icon as string}</span>
-                      ) : (
-                        <Icon className="w-8 h-8 text-white" />
-                      )}
-                    </div>
-                    <h3 className="text-lg font-semibold text-white">{skill.name}</h3>
+              {loadingSkills ? (
+                Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="glass-card rounded-2xl p-8 animate-pulse">
+                    <div className="w-16 h-16 rounded-xl bg-white/10 mb-4" />
+                    <div className="h-5 w-24 rounded bg-white/10" />
                   </div>
-                )
-              })}
+                ))
+              ) : (
+                skills.map((skill, index) => {
+                  const Icon = iconMap[skill.icon] || Code2
+                  const delays = ["delay-100", "delay-200", "delay-300", "delay-400"]
+                  return (
+                    <div
+                      key={skill.id}
+                      className={`glass-card rounded-2xl p-8 hover-lift group cursor-pointer scroll-reveal zoom-in ${delays[index % 4]}`}
+                    >
+                      <div
+                        className="w-16 h-16 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
+                        style={{ backgroundColor: `${skill.color}20` }}
+                      >
+                        <Icon className="w-8 h-8" style={{ color: skill.color }} />
+                      </div>
+                      <h3 className="text-lg font-semibold text-white">{skill.name}</h3>
+                    </div>
+                  )
+                })
+              )}
             </div>
           </div>
         </section>
 
-        <section id="projetos" className="py-32 px-6">
-          <div className="container mx-auto max-w-7xl">
+        <section id="projetos" className="relative py-32 px-6 overflow-hidden">
+          {/* Background decorativo */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-1/3 -right-48 w-[500px] h-[500px] bg-purple-600/15 rounded-full blur-[150px]" />
+            <div className="absolute bottom-1/3 -left-48 w-[500px] h-[500px] bg-cyan-600/15 rounded-full blur-[150px]" />
+          </div>
+
+          <div className="container mx-auto max-w-7xl relative z-10">
             <div className="text-center mb-16 scroll-reveal slide-down">
-              <h2 className="text-5xl font-bold text-white mb-4">
+              <span className="inline-block px-4 py-2 rounded-full bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border border-purple-500/30 text-sm font-medium text-purple-300 mb-6">
+                Portfolio
+              </span>
+              <h2 className="text-5xl md:text-6xl font-bold text-white mb-4">
                 Nossos <span className="text-gradient">Projetos</span>
               </h2>
-              <p className="text-xl text-gray-300">Conheça alguns dos nossos trabalhos mais recentes</p>
+              <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+                Conheca alguns dos nossos trabalhos mais recentes e veja como transformamos ideias em solucoes digitais
+              </p>
             </div>
 
             {loadingProjects ? (
               <div className="flex justify-center items-center py-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-full border-4 border-purple-500/20 border-t-purple-500 animate-spin" />
+                  <div className="absolute inset-0 w-16 h-16 rounded-full border-4 border-transparent border-r-cyan-500/50 animate-spin" style={{ animationDirection: "reverse", animationDuration: "1.5s" }} />
+                </div>
               </div>
             ) : projects.length === 0 ? (
               <div className="text-center py-20">
-                <Folder className="w-16 h-16 text-gray-500 mx-auto mb-4" />
-                <p className="text-gray-400 text-lg">Nenhum projeto cadastrado ainda.</p>
+                <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-white/5 flex items-center justify-center">
+                  <Folder className="w-12 h-12 text-gray-500" />
+                </div>
+                <p className="text-gray-400 text-lg mb-2">Nenhum projeto cadastrado ainda</p>
+                <p className="text-gray-500 text-sm">Os projetos aparecerao aqui assim que forem adicionados</p>
               </div>
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {projects.map((project, index) => {
-                  const animations = ["slide-left", "slide-up", "slide-right", "slide-right", "slide-up", "slide-left"]
-                  const delays = ["delay-100", "delay-200", "delay-300", "delay-100", "delay-200", "delay-300"]
-                  return (
-                    <div
-                      key={project.id}
-                      className={`glass-card rounded-2xl overflow-hidden hover-lift group cursor-pointer scroll-reveal ${animations[index % 6]} ${delays[index % 6]}`}
-                    >
-                      <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-purple-600/20 to-blue-600/20">
-                        <Image
-                          src={project.image_url || "/placeholder.svg"}
-                          alt={project.title}
-                          fill
-                          className="object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
-                      </div>
-                      <div className="p-6">
-                        <h3 className="text-xl font-semibold text-white mb-2">{project.title}</h3>
-                        <p className="text-gray-400 mb-4">{project.description}</p>
-                        <div className="flex flex-wrap gap-2">
-                          {project.technologies?.map((tag, i) => (
-                            <span
-                              key={i}
-                              className="px-3 py-1 text-xs rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
+                {projects.map((project, index) => (
+                  <ProjectCard key={project.id} project={project} index={index} />
+                ))}
               </div>
             )}
           </div>
         </section>
 
-        {/* Seção de Contato - ATUALIZADA */}
-        <section id="contato" className="relative py-32 px-6">
-          <div className="container mx-auto max-w-5xl">
-            <div className="text-center mb-16 scroll-reveal slide-down">
-              <h2 className="text-5xl font-bold text-white mb-4">
-                Entre em <span className="text-gradient">Contato</span>
+        {/* Seção de Contato - REDESENHADA */}
+        <section id="contato" className="relative py-32 px-6 overflow-hidden">
+          {/* Background decorativo */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-1/4 -left-32 w-96 h-96 bg-purple-600/20 rounded-full blur-[120px]" />
+            <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-cyan-600/20 rounded-full blur-[120px]" />
+          </div>
+
+          <div className="container mx-auto max-w-7xl relative z-10">
+            {/* Header */}
+            <div className="text-center mb-20 scroll-reveal slide-down">
+              <span className="inline-block px-4 py-2 rounded-full bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border border-purple-500/30 text-sm font-medium text-purple-300 mb-6">
+                Vamos Conversar
+              </span>
+              <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
+                Transforme sua <span className="text-gradient">Visao</span> em{" "}
+                <span className="text-gradient">Realidade</span>
               </h2>
-              <p className="text-xl text-gray-300">Vamos transformar sua ideia em realidade</p>
+              <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+                Estamos prontos para entender seu projeto e criar solucoes sob medida para o seu negocio
+              </p>
             </div>
 
-            <div className="glass-card rounded-3xl p-8 md:p-12 scroll-reveal zoom-in delay-200">
-              <div className="grid md:grid-cols-3 gap-6 mb-12">
-                <a href="mailto:contato.gvsoftware@gmail.com" className="glass-card rounded-xl p-6 hover-lift group">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <Mail className="w-6 h-6 text-white" />
+            <div className="grid lg:grid-cols-5 gap-8">
+              {/* Lado esquerdo - Info cards */}
+              <div className="lg:col-span-2 space-y-6 scroll-reveal slide-right">
+                {/* Card principal */}
+                <div className="glass-card rounded-3xl p-8 border border-white/10 relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-transparent to-cyan-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="relative z-10">
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-6 shadow-lg shadow-purple-500/25">
+                      <Sparkles className="w-8 h-8 text-white" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-3">Projeto Personalizado</h3>
+                    <p className="text-gray-400 leading-relaxed">
+                      Cada projeto e unico. Desenvolvemos solucoes 100% personalizadas para atender as necessidades especificas do seu negocio.
+                    </p>
                   </div>
-                  <h3 className="text-lg font-semibold text-white mb-1">E-mail</h3>
-                  <p className="text-gray-400">contato.gvsoftware@gmail.com</p>
-                </a>
+                </div>
 
-                <a href="tel:+5517997853416" className="glass-card rounded-xl p-6 hover-lift group">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <Phone className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-white mb-1">Telefone</h3>
-                  <p className="text-gray-400">(17) 99785-3416</p>
-                </a>
+                {/* Cards de contato */}
+                <div className="grid grid-cols-1 gap-4">
+                  <a 
+                    href="mailto:contato.gvsoftware@gmail.com" 
+                    className="glass-card rounded-2xl p-5 border border-white/10 flex items-center gap-4 group hover:border-purple-500/50 transition-all duration-300"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-lg shadow-purple-500/20">
+                      <Mail className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-500 mb-0.5">E-mail</p>
+                      <p className="text-white font-medium truncate">contato.gvsoftware@gmail.com</p>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-gray-500 group-hover:text-purple-400 group-hover:translate-x-1 transition-all" />
+                  </a>
 
-                <a
-                  href="https://www.instagram.com/gv_software/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="glass-card rounded-xl p-6 hover-lift group"
-                >
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-pink-500 via-purple-500 to-orange-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <Instagram className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-white mb-1">Instagram</h3>
-                  <p className="text-gray-400">@gv_software</p>
-                </a>
+                  <a 
+                    href="https://wa.me/5517997853416" 
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="glass-card rounded-2xl p-5 border border-white/10 flex items-center gap-4 group hover:border-green-500/50 transition-all duration-300"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-lg shadow-green-500/20">
+                      <Phone className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-500 mb-0.5">WhatsApp</p>
+                      <p className="text-white font-medium">(17) 99785-3416</p>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-gray-500 group-hover:text-green-400 group-hover:translate-x-1 transition-all" />
+                  </a>
+
+                  <a
+                    href="https://www.instagram.com/gv_software/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="glass-card rounded-2xl p-5 border border-white/10 flex items-center gap-4 group hover:border-pink-500/50 transition-all duration-300"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 via-purple-500 to-orange-500 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-lg shadow-pink-500/20">
+                      <Instagram className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-500 mb-0.5">Instagram</p>
+                      <p className="text-white font-medium">@gv_software</p>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-gray-500 group-hover:text-pink-400 group-hover:translate-x-1 transition-all" />
+                  </a>
+                </div>
               </div>
 
-              {submitSuccess && (
-                <div className="mb-8 p-4 rounded-xl bg-green-500/20 border border-green-500/50 flex items-center gap-3">
-                  <CheckCircle2 className="w-6 h-6 text-green-400" />
-                  <p className="text-green-400 font-medium">
-                    Mensagem enviada com sucesso! Entraremos em contato em breve.
-                  </p>
-                </div>
-              )}
+              {/* Lado direito - Formulario */}
+              <div className="lg:col-span-3 scroll-reveal slide-left delay-200">
+                <div className="glass-card rounded-3xl p-8 md:p-10 border border-white/10 relative overflow-hidden">
+                  {/* Decoracao do form */}
+                  <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-purple-500/20 to-transparent rounded-full blur-3xl" />
+                  <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-cyan-500/20 to-transparent rounded-full blur-3xl" />
+                  
+                  <div className="relative z-10">
+                    <h3 className="text-2xl font-bold text-white mb-2">Envie sua mensagem</h3>
+                    <p className="text-gray-400 mb-8">Preencha o formulario e retornaremos em ate 24 horas</p>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Linha 1: Nome e Empresa */}
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="relative">
-                    <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                    <Input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      placeholder="Seu nome completo *"
-                      required
-                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 transition-all"
-                    />
-                  </div>
-                  <div className="relative">
-                    <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                    <Input
-                      type="text"
-                      name="company"
-                      value={formData.company}
-                      onChange={handleInputChange}
-                      placeholder="Nome da empresa (opcional)"
-                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 transition-all"
-                    />
-                  </div>
-                </div>
+                    {submitSuccess && (
+                      <div className="mb-6 p-4 rounded-2xl bg-green-500/10 border border-green-500/30 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
+                          <CheckCircle2 className="w-5 h-5 text-green-400" />
+                        </div>
+                        <p className="text-green-400 font-medium">
+                          Mensagem enviada com sucesso! Retornaremos em breve.
+                        </p>
+                      </div>
+                    )}
 
-                {/* Linha 2: Email e Telefone */}
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                    <Input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      placeholder="Seu melhor e-mail *"
-                      required
-                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 transition-all"
-                    />
-                  </div>
-                  <div className="relative">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                    <Input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      placeholder="WhatsApp / Telefone *"
-                      required
-                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 transition-all"
-                    />
-                  </div>
-                </div>
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                    {/* Linha 1: Nome e Empresa */}
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="relative group">
+                        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl opacity-0 group-focus-within:opacity-100 blur transition-opacity" />
+                        <div className="relative">
+                          <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-purple-400 transition-colors" />
+                          <Input
+                            type="text"
+                            name="name"
+                            value={formData.name}
+                            onChange={handleInputChange}
+                            placeholder="Seu nome completo *"
+                            required
+                            className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/[0.03] border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.05] transition-all"
+                          />
+                        </div>
+                      </div>
+                      <div className="relative group">
+                        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl opacity-0 group-focus-within:opacity-100 blur transition-opacity" />
+                        <div className="relative">
+                          <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-purple-400 transition-colors" />
+                          <Input
+                            type="text"
+                            name="company"
+                            value={formData.company}
+                            onChange={handleInputChange}
+                            placeholder="Empresa (opcional)"
+                            className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/[0.03] border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.05] transition-all"
+                          />
+                        </div>
+                      </div>
+                    </div>
 
-                {/* Linha 3: Assunto */}
-                <div className="relative">
-                  <MessageCircle className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 z-10" />
-                  <select
-                    name="subject"
-                    value={formData.subject}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 transition-all appearance-none cursor-pointer"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                      backgroundRepeat: "no-repeat",
-                      backgroundPosition: "right 1rem center",
-                      backgroundSize: "1.5rem",
-                    }}
-                  >
-                    <option value="" disabled className="bg-[#0a0118] text-gray-400">
-                      Qual o assunto? *
-                    </option>
-                    <option value="Site Institucional" className="bg-[#0a0118] text-white">
-                      Site Institucional
-                    </option>
-                    <option value="Loja Virtual / E-commerce" className="bg-[#0a0118] text-white">
-                      Loja Virtual / E-commerce
-                    </option>
-                    <option value="Sistema Web / Aplicativo" className="bg-[#0a0118] text-white">
-                      Sistema Web / Aplicativo
-                    </option>
-                    <option value="Landing Page" className="bg-[#0a0118] text-white">
-                      Landing Page
-                    </option>
-                    <option value="Manutenção / Suporte" className="bg-[#0a0118] text-white">
-                      Manutenção / Suporte
-                    </option>
-                    <option value="Consultoria" className="bg-[#0a0118] text-white">
-                      Consultoria
-                    </option>
-                    <option value="Outro" className="bg-[#0a0118] text-white">
-                      Outro
-                    </option>
-                  </select>
-                </div>
+                    {/* Linha 2: Email e Telefone */}
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="relative group">
+                        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl opacity-0 group-focus-within:opacity-100 blur transition-opacity" />
+                        <div className="relative">
+                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-purple-400 transition-colors" />
+                          <Input
+                            type="email"
+                            name="email"
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            placeholder="Seu melhor e-mail *"
+                            required
+                            className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/[0.03] border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.05] transition-all"
+                          />
+                        </div>
+                      </div>
+                      <div className="relative group">
+                        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl opacity-0 group-focus-within:opacity-100 blur transition-opacity" />
+                        <div className="relative">
+                          <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-purple-400 transition-colors" />
+                          <Input
+                            type="tel"
+                            name="phone"
+                            value={formData.phone}
+                            onChange={handleInputChange}
+                            placeholder="WhatsApp *"
+                            required
+                            className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/[0.03] border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.05] transition-all"
+                          />
+                        </div>
+                      </div>
+                    </div>
 
-                {/* Linha 4: Orçamento e Prazo */}
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <select
-                      name="budget"
-                      value={formData.budget}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-4 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 transition-all appearance-none cursor-pointer"
-                      style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                        backgroundRepeat: "no-repeat",
-                        backgroundPosition: "right 1rem center",
-                        backgroundSize: "1.5rem",
-                      }}
+                    {/* Linha 3: Assunto */}
+                    <div className="relative group">
+                      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl opacity-0 group-focus-within:opacity-100 blur transition-opacity" />
+                      <div className="relative">
+                        <MessageCircle className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-purple-400 transition-colors z-10" />
+                        <select
+                          name="subject"
+                          value={formData.subject}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full pl-12 pr-10 py-4 rounded-xl bg-white/[0.03] border border-white/10 text-white focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.05] transition-all appearance-none cursor-pointer"
+                          style={{
+                            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                            backgroundRepeat: "no-repeat",
+                            backgroundPosition: "right 1rem center",
+                            backgroundSize: "1.25rem",
+                          }}
+                        >
+                          <option value="" disabled className="bg-[#0a0a0a]">Tipo de projeto *</option>
+                          <option value="Site Institucional" className="bg-[#0a0a0a]">Site Institucional</option>
+                          <option value="Loja Virtual / E-commerce" className="bg-[#0a0a0a]">Loja Virtual / E-commerce</option>
+                          <option value="Sistema Web / Aplicativo" className="bg-[#0a0a0a]">Sistema Web / Aplicativo</option>
+                          <option value="Landing Page" className="bg-[#0a0a0a]">Landing Page</option>
+                          <option value="Manutenção / Suporte" className="bg-[#0a0a0a]">Manutencao / Suporte</option>
+                          <option value="Consultoria" className="bg-[#0a0a0a]">Consultoria</option>
+                          <option value="Outro" className="bg-[#0a0a0a]">Outro</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Linha 4: Orçamento e Prazo */}
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <select
+                        name="budget"
+                        value={formData.budget}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-4 rounded-xl bg-white/[0.03] border border-white/10 text-white focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.05] transition-all appearance-none cursor-pointer"
+                        style={{
+                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                          backgroundRepeat: "no-repeat",
+                          backgroundPosition: "right 1rem center",
+                          backgroundSize: "1.25rem",
+                        }}
+                      >
+                        <option value="" className="bg-[#0a0a0a]">Orcamento (opcional)</option>
+                        <option value="Até R$ 1.000" className="bg-[#0a0a0a]">Ate R$ 1.000</option>
+                        <option value="R$ 1.000 - R$ 3.000" className="bg-[#0a0a0a]">R$ 1.000 - R$ 3.000</option>
+                        <option value="R$ 3.000 - R$ 5.000" className="bg-[#0a0a0a]">R$ 3.000 - R$ 5.000</option>
+                        <option value="R$ 5.000 - R$ 10.000" className="bg-[#0a0a0a]">R$ 5.000 - R$ 10.000</option>
+                        <option value="Acima de R$ 10.000" className="bg-[#0a0a0a]">Acima de R$ 10.000</option>
+                      </select>
+                      <select
+                        name="deadline"
+                        value={formData.deadline}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-4 rounded-xl bg-white/[0.03] border border-white/10 text-white focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.05] transition-all appearance-none cursor-pointer"
+                        style={{
+                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                          backgroundRepeat: "no-repeat",
+                          backgroundPosition: "right 1rem center",
+                          backgroundSize: "1.25rem",
+                        }}
+                      >
+                        <option value="" className="bg-[#0a0a0a]">Prazo (opcional)</option>
+                        <option value="Urgente (até 1 semana)" className="bg-[#0a0a0a]">Urgente (ate 1 semana)</option>
+                        <option value="Curto (1-2 semanas)" className="bg-[#0a0a0a]">Curto (1-2 semanas)</option>
+                        <option value="Médio (2-4 semanas)" className="bg-[#0a0a0a]">Medio (2-4 semanas)</option>
+                        <option value="Flexível (1-2 meses)" className="bg-[#0a0a0a]">Flexivel (1-2 meses)</option>
+                        <option value="Sem pressa" className="bg-[#0a0a0a]">Sem pressa</option>
+                      </select>
+                    </div>
+
+                    {/* Linha 5: Mensagem */}
+                    <div className="relative group">
+                      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl opacity-0 group-focus-within:opacity-100 blur transition-opacity" />
+                      <Textarea
+                        name="message"
+                        value={formData.message}
+                        onChange={handleInputChange}
+                        placeholder="Conte-nos sobre seu projeto... *"
+                        required
+                        rows={4}
+                        className="relative w-full px-4 py-4 rounded-xl bg-white/[0.03] border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.05] transition-all resize-none"
+                      />
+                    </div>
+
+                    {/* Botao de envio */}
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full h-14 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-[length:200%_100%] hover:bg-[position:100%_0] border-0 text-base font-semibold rounded-xl hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300 disabled:opacity-50"
                     >
-                      <option value="" className="bg-[#0a0118] text-gray-400">
-                        Orçamento estimado (opcional)
-                      </option>
-                      <option value="Até R$ 1.000" className="bg-[#0a0118] text-white">
-                        Até R$ 1.000
-                      </option>
-                      <option value="R$ 1.000 - R$ 3.000" className="bg-[#0a0118] text-white">
-                        R$ 1.000 - R$ 3.000
-                      </option>
-                      <option value="R$ 3.000 - R$ 5.000" className="bg-[#0a0118] text-white">
-                        R$ 3.000 - R$ 5.000
-                      </option>
-                      <option value="R$ 5.000 - R$ 10.000" className="bg-[#0a0118] text-white">
-                        R$ 5.000 - R$ 10.000
-                      </option>
-                      <option value="Acima de R$ 10.000" className="bg-[#0a0118] text-white">
-                        Acima de R$ 10.000
-                      </option>
-                    </select>
-                  </div>
-                  <div>
-                    <select
-                      name="deadline"
-                      value={formData.deadline}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-4 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 transition-all appearance-none cursor-pointer"
-                      style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                        backgroundRepeat: "no-repeat",
-                        backgroundPosition: "right 1rem center",
-                        backgroundSize: "1.5rem",
-                      }}
-                    >
-                      <option value="" className="bg-[#0a0118] text-gray-400">
-                        Prazo desejado (opcional)
-                      </option>
-                      <option value="Urgente (até 1 semana)" className="bg-[#0a0118] text-white">
-                        Urgente (até 1 semana)
-                      </option>
-                      <option value="Curto (1-2 semanas)" className="bg-[#0a0118] text-white">
-                        Curto (1-2 semanas)
-                      </option>
-                      <option value="Médio (2-4 semanas)" className="bg-[#0a0118] text-white">
-                        Médio (2-4 semanas)
-                      </option>
-                      <option value="Flexível (1-2 meses)" className="bg-[#0a0118] text-white">
-                        Flexível (1-2 meses)
-                      </option>
-                      <option value="Sem pressa" className="bg-[#0a0118] text-white">
-                        Sem pressa
-                      </option>
-                    </select>
+                      {isSubmitting ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                          Enviando...
+                        </>
+                      ) : (
+                        <>
+                          Enviar Mensagem
+                          <ArrowRight className="w-5 h-5 ml-2" />
+                        </>
+                      )}
+                    </Button>
+
+                    <p className="text-center text-gray-500 text-sm">* Campos obrigatorios</p>
+                  </form>
                   </div>
                 </div>
-
-                {/* Linha 5: Mensagem */}
-                <div>
-                  <Textarea
-                    name="message"
-                    value={formData.message}
-                    onChange={handleInputChange}
-                    placeholder="Conte-nos mais sobre seu projeto... O que você precisa? Quais funcionalidades? *"
-                    required
-                    rows={5}
-                    className="w-full px-4 py-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 transition-all resize-none"
-                  />
-                </div>
-
-                {/* Botão de envio */}
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-[length:200%_100%] hover:bg-[position:100%_0] border-0 text-lg py-6 hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                      Enviando...
-                    </>
-                  ) : (
-                    <>
-                      <ArrowRight className="w-5 h-5 mr-2" />
-                      Enviar Mensagem
-                    </>
-                  )}
-                </Button>
-
-                <p className="text-center text-gray-500 text-sm">Campos marcados com * são obrigatórios</p>
-              </form>
+              </div>
             </div>
           </div>
         </section>
