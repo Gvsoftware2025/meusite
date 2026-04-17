@@ -72,7 +72,8 @@ export function ProjectCard({ project, index }: ProjectCardProps) {
         <ProjectImageSlider
           images={images}
           title={project.title}
-          autoPlay={false}
+          autoPlay={true}
+          autoPlayInterval={3000}
         />
 
         {/* Content */}

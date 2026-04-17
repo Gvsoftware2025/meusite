@@ -17,13 +17,12 @@ export function ProjectImageSlider({
   images,
   title,
   autoPlay = true,
-  autoPlayInterval = 4000,
+  autoPlayInterval = 3000,
   className,
 }: ProjectImageSliderProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(autoPlay)
   const [isFullscreen, setIsFullscreen] = useState(false)
-  const [isHovered, setIsHovered] = useState(false)
 
   // Garantir que temos pelo menos uma imagem
   const imageList = images && images.length > 0 ? images : ["/placeholder.svg"]
@@ -41,13 +40,13 @@ export function ProjectImageSlider({
     setCurrentIndex(index)
   }
 
-  // Autoplay
+  // Autoplay - sempre ativo, nao pausa no hover
   useEffect(() => {
-    if (!isPlaying || !hasMultipleImages || isHovered) return
+    if (!isPlaying || !hasMultipleImages || isFullscreen) return
 
     const interval = setInterval(goToNext, autoPlayInterval)
     return () => clearInterval(interval)
-  }, [isPlaying, hasMultipleImages, isHovered, goToNext, autoPlayInterval])
+  }, [isPlaying, hasMultipleImages, isFullscreen, goToNext, autoPlayInterval])
 
   // Keyboard navigation
   useEffect(() => {
@@ -68,8 +67,6 @@ export function ProjectImageSlider({
       {/* Main Slider */}
       <div
         className={cn("relative group overflow-hidden rounded-xl", className)}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
       >
         {/* Images */}
         <div className="relative aspect-video overflow-hidden bg-black/20">
