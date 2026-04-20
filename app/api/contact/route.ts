@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { query } from "@/lib/db"
 
 export async function POST(request: Request) {
   try {
@@ -6,7 +7,19 @@ export async function POST(request: Request) {
 
     const { nome, empresa, email, telefone, assunto, orcamento, prazo, mensagem } = data
 
-    const logoUrl = "/images/1000861281.jpeg"
+    // Salvar no banco de dados
+    try {
+      await query(
+        `INSERT INTO meusite.portfolio_contacts (name, company, email, phone, subject, budget, deadline, message, is_read)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, false)`,
+        [nome, empresa || null, email, telefone, assunto, orcamento || null, prazo || null, mensagem]
+      )
+    } catch (dbError) {
+      console.error("Erro ao salvar no banco:", dbError)
+      // Continua para tentar enviar o email mesmo se o banco falhar
+    }
+
+    const logoUrl = "https://gvsoftware.com.br/images/gv-logo-new.jpeg"
 
     const htmlContent = `
 <!DOCTYPE html>
