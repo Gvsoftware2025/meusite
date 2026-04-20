@@ -7,6 +7,9 @@ import Link from "next/link"
 import { Plus, LogOut } from "lucide-react"
 import Image from "next/image"
 
+// Evitar pre-render durante o build
+export const dynamic = 'force-dynamic'
+
 export default async function DashboardPage() {
   const supabase = await createClient()
 

@@ -19,6 +19,8 @@ import {
 } from "lucide-react"
 import type { Project } from "@/lib/types/database"
 
+export const dynamic = 'force-dynamic'
+
 const statusLabels: Record<Project["status"], string> = {
   draft: "Rascunho",
   proposal_sent: "Proposta Enviada",
