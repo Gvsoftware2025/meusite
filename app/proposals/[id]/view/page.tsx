@@ -2,6 +2,8 @@ import { notFound } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { ProposalView } from "@/components/proposals/proposal-view"
 
+export const dynamic = 'force-dynamic'
+
 export default async function ProposalViewPage({
   params,
   searchParams,
