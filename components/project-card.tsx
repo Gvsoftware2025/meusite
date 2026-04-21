@@ -28,22 +28,32 @@ export function ProjectCard({ project, index }: ProjectCardProps) {
 
   // Parse images - pode ser JSON string ou array
   const getImages = (): string[] => {
+    let imgList: string[] = []
+    
     if (project.images) {
       if (typeof project.images === "string") {
         try {
-          return JSON.parse(project.images)
+          const parsed = JSON.parse(project.images)
+          if (Array.isArray(parsed)) {
+            imgList = parsed
+          }
         } catch {
-          return [project.images]
+          imgList = [project.images]
         }
-      }
-      if (Array.isArray(project.images)) {
-        return project.images
+      } else if (Array.isArray(project.images)) {
+        imgList = project.images
       }
     }
-    if (project.image_url) {
-      return [project.image_url]
+    
+    // Filtrar imagens vazias
+    imgList = imgList.filter(img => img && img.trim() !== "")
+    
+    // Se nao tem imagens no array, usar image_url como fallback
+    if (imgList.length === 0 && project.image_url) {
+      imgList = [project.image_url]
     }
-    return []
+    
+    return imgList
   }
 
   const images = getImages()
