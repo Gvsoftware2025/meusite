@@ -1,8 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import Image from "next/image"
-import { ChevronLeft, ChevronRight, X, Expand } from "lucide-react"
+import { ChevronLeft, ChevronRight, X, Expand, ImageOff } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface ProjectImageSliderProps {
@@ -22,9 +21,13 @@ export function ProjectImageSlider({
 }: ProjectImageSliderProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [failedImages, setFailedImages] = useState<Set<number>>(new Set())
 
+  // Filtrar imagens validas (nao vazias)
+  const validImages = images?.filter(img => img && img.trim() !== "") || []
+  
   // Garantir que temos pelo menos uma imagem
-  const imageList = images && images.length > 0 ? images : ["/placeholder.svg"]
+  const imageList = validImages.length > 0 ? validImages : []
   const hasMultipleImages = imageList.length > 1
 
   const goToNext = useCallback(() => {
@@ -68,27 +71,41 @@ export function ProjectImageSlider({
         className={cn("relative group overflow-hidden rounded-xl", className)}
       >
         {/* Images */}
-        <div className="relative aspect-video overflow-hidden bg-black/20">
-          {imageList.map((image, index) => (
-            <div
-              key={index}
-              className={cn(
-                "absolute inset-0 transition-all duration-700 ease-out",
-                index === currentIndex
-                  ? "opacity-100 scale-100"
-                  : "opacity-0 scale-105"
-              )}
-            >
-              <Image
-                src={image}
-                alt={`${title} - Imagem ${index + 1}`}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                priority={index === 0}
-              />
+        <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800">
+          {imageList.length === 0 ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500">
+              <ImageOff className="w-12 h-12 mb-2 opacity-50" />
+              <span className="text-sm">Sem imagem</span>
             </div>
-          ))}
+          ) : (
+            imageList.map((image, index) => (
+              <div
+                key={index}
+                className={cn(
+                  "absolute inset-0 transition-all duration-700 ease-out",
+                  index === currentIndex
+                    ? "opacity-100 scale-100"
+                    : "opacity-0 scale-105"
+                )}
+              >
+                {failedImages.has(index) ? (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800 text-gray-500">
+                    <ImageOff className="w-12 h-12 mb-2 opacity-50" />
+                    <span className="text-sm">Erro ao carregar</span>
+                  </div>
+                ) : (
+                  <img
+                    src={image}
+                    alt={`${title} - Imagem ${index + 1}`}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    onError={() => {
+                      setFailedImages(prev => new Set(prev).add(index))
+                    }}
+                  />
+                )}
+              </div>
+            ))
+          )}
 
           {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -182,16 +199,13 @@ export function ProjectImageSlider({
 
           {/* Image */}
           <div
-            className="relative w-full h-full max-w-6xl max-h-[85vh] mx-auto p-4"
+            className="relative w-full h-full max-w-6xl max-h-[85vh] mx-auto p-4 flex items-center justify-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <Image
+            <img
               src={imageList[currentIndex]}
               alt={`${title} - Imagem ${currentIndex + 1}`}
-              fill
-              className="object-contain"
-              sizes="100vw"
-              priority
+              className="max-w-full max-h-full object-contain"
             />
           </div>
 
