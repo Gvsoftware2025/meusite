@@ -10,10 +10,10 @@ interface Project {
   title: string
   description: string
   image_url?: string
-  images?: string[]
+  images?: string[] | string | null
   project_url?: string
   github_url?: string
-  technologies?: string[]
+  technologies?: string[] | string | null
   is_featured?: boolean
   show_link?: boolean
 }
@@ -93,7 +93,26 @@ export function ProjectCard({ project, index }: ProjectCardProps) {
   }
 
   const images = getImages()
-  const technologies = project.technologies || []
+  
+  // Parse technologies - pode ser JSON string ou array
+  const getTechnologies = (): string[] => {
+    if (!project.technologies) return []
+    if (typeof project.technologies === "string") {
+      try {
+        const parsed = JSON.parse(project.technologies)
+        if (Array.isArray(parsed)) return parsed
+        return [project.technologies]
+      } catch {
+        return [project.technologies]
+      }
+    }
+    if (Array.isArray(project.technologies)) {
+      return project.technologies
+    }
+    return []
+  }
+  
+  const technologies = getTechnologies()
 
   const delays = ["delay-100", "delay-200", "delay-300", "delay-400"]
 
