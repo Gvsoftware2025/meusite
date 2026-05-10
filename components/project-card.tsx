@@ -23,6 +23,41 @@ interface ProjectCardProps {
   index: number
 }
 
+// Helper para processar URL de imagem
+const processImageUrl = (url: string): string => {
+  if (!url) return ''
+  
+  // Se ja e uma URL de blob valida (publica), usar diretamente
+  if (url.includes('blob.vercel-storage.com') || url.includes('.public.blob.vercel-storage.com')) {
+    return url
+  }
+  
+  // Se e base64, usar diretamente
+  if (url.startsWith('data:image')) {
+    return url
+  }
+  
+  // Se e uma URL relativa com /api/file, usar diretamente
+  if (url.startsWith('/api/file')) {
+    return url
+  }
+  
+  // Se e uma URL absoluta de outro servidor que tem /api/file, extrair o pathname
+  if (url.includes('/api/file?pathname=')) {
+    try {
+      const urlObj = new URL(url)
+      const pathname = urlObj.searchParams.get('pathname')
+      if (pathname) {
+        return `/api/file?pathname=${encodeURIComponent(pathname)}`
+      }
+    } catch {
+      // Se falhar o parse, retornar como esta
+    }
+  }
+  
+  return url
+}
+
 export function ProjectCard({ project, index }: ProjectCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
@@ -53,7 +88,8 @@ export function ProjectCard({ project, index }: ProjectCardProps) {
       imgList = [project.image_url]
     }
     
-    return imgList
+    // Processar cada URL
+    return imgList.map(processImageUrl).filter(img => img !== '')
   }
 
   const images = getImages()
